@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int *data;
+    size_t size;      /* elements in use */
+    size_t capacity;  /* allocated slots */
+} Vec;
+
+void vec_init(Vec *v) {
+    v->data = NULL;
+    v->size = 0;
+    v->capacity = 0;
+}
+
+int vec_push(Vec *v, int value) {
+    if (v->size == v->capacity) {
+        size_t new_cap = v->capacity ? v->capacity * 2 : 4;
+        int *tmp = realloc(v->data, new_cap * sizeof(int));
+        if (!tmp) return -1;          /* old data is still valid */
+        v->data = tmp;
+        v->capacity = new_cap;
+    }
+    v->data[v->size++] = value;
+    return 0;
+}
+
+int vec_pop(Vec *v) {
+    return v->data[--v->size];
+}
+
+void vec_free(Vec *v) {
+    free(v->data);
+    v->data = NULL;
+    v->size = v->capacity = 0;
+}
+
+int main(void) {
+    Vec v;
+    vec_init(&v);
+
+    for (int i = 1; i <= 10; i++) {
+        if (vec_push(&v, i * i) != 0) {
+            fprintf(stderr, "out of memory\n");
+            vec_free(&v);
+            return 1;
+        }
+    }
+
+    for (size_t i = 0; i < v.size; i++) {
+        printf("%d ", v.data[i]);
+    }
+    printf("\nsize=%zu capacity=%zu\n", v.size, v.capacity);
+
+    vec_free(&v);
+    return 0;
+}
